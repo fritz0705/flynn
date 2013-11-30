@@ -41,6 +41,8 @@ def encode(io, obj):
 			encode_generator(io, obj, type_)
 		else:
 			encode(io, obj)
+	elif isinstance(obj, collections.abc.Iterable):
+		encode_array_generator(io, iter(obj))
 	else:
 		raise EncoderError("{} has no defined mapping".format(type(obj)))
 
