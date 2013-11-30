@@ -10,7 +10,7 @@ def decode(obj):
 	if isinstance(obj, bytes):
 		return _decode_iter(iter(obj))
 	elif isinstance(obj, str):
-		pass
+		return _decode_iter(iter(bytes.fromhex(obj)))
 	elif isinstance(obj, io.IOBase):
 		def byte_gen():
 			while True:
