@@ -38,7 +38,7 @@ def _decode_length(mtype, ainfo, stream):
 	elif ainfo == 26:
 		return int.from_bytes(_consume(stream, 4), "big")
 	elif ainfo == 27:
-		return int.from_bytes(_consume(stream, 5), "big")
+		return int.from_bytes(_consume(stream, 8), "big")
 	elif ainfo == 31:
 		return None
 	
