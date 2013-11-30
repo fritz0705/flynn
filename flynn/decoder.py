@@ -143,13 +143,13 @@ def decode_other(mtype, ainfo, stream):
 	elif ainfo == 31:
 		raise _Break()
 
-_jump_table = {
-	0: lambda *args: decode_integer(*args, sign=False),
-	1: lambda *args: decode_integer(*args, sign=True),
-	2: decode_bytestring,
-	3: decode_textstring,
-	4: decode_array,
-	5: decode_map,
-	6: decode_tagging,
-	7: decode_other,
-}
+_jump_table = [
+	lambda *args: decode_integer(*args, sign=False),
+	lambda *args: decode_integer(*args, sign=True),
+	decode_bytestring,
+	decode_textstring,
+	decode_array,
+	decode_map,
+	decode_tagging,
+	decode_other,
+]
