@@ -3,6 +3,8 @@
 import io
 import collections.abc
 
+import flynn.data
+
 class EncoderError(Exception):
 	pass
 
@@ -43,6 +45,8 @@ def encode(io, obj):
 			encode(io, obj)
 	elif isinstance(obj, collections.abc.Iterable):
 		encode_array_generator(io, iter(obj))
+	elif obj is flynn.data.Undefined:
+		encode_undefined(io)
 	else:
 		raise EncoderError("{} has no defined mapping".format(type(obj)))
 
@@ -93,6 +97,9 @@ def encode_false(io):
 
 def encode_null(io):
 	io.write(_encode_ibyte(7, 22))
+
+def encode_undefined(io):
+	io.write(_encode_ibyte(7, 23))
 
 def encode_tagging(io, tagging):
 	io.write(_encode_ibyte(6, tagging[0]))

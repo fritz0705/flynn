@@ -1,5 +1,7 @@
 # coding: utf-8
 
+import flynn.data
+
 class _Break(Exception):
 	pass
 
@@ -8,14 +10,18 @@ class InvalidCborError(Exception):
 
 def decode(obj):
 	if isinstance(obj, bytes):
-		return _decode_iter(iter(obj))
+		obj = iter(obj)
 	elif isinstance(obj, str):
-		return _decode_iter(iter(bytes.fromhex(obj)))
+		obj = iter(bytes.fromhex(obj))
 	elif isinstance(obj, io.IOBase):
 		def byte_gen():
 			while True:
 				yield obj.read(1)
-		return _decode_iter(byte_gen())
+		obj = byte_gen()
+	try:
+		return _decode_iter(obj)
+	except _Break:
+		raise InvalidCborError(obj, "Invalid break item found")
 
 def _decode_iter(stream, jump_table=None):
 	if jump_table is None: jump_table = _jump_table
@@ -131,7 +137,7 @@ def decode_map(mtype, ainfo, stream):
 
 def decode_tagging(mtype, ainfo, stream):
 	length = _decode_length(mtype, ainfo, stream)
-	return (length, _decode_iter(stream))
+	return flynn.data.Tagging(length, _decode_iter(stream))
 
 def decode_other(mtype, ainfo, stream):
 	if ainfo == 20:
@@ -140,6 +146,8 @@ def decode_other(mtype, ainfo, stream):
 		return True
 	elif ainfo == 22:
 		return None
+	elif ainfo == 23:
+		return flynn.data.Undefined
 	elif ainfo == 31:
 		raise _Break()
 
