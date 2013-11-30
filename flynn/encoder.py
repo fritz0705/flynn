@@ -34,15 +34,15 @@ def encode(io, obj):
 
 def _encode_ibyte(major, length):
 	if length < 24:
-		return ((major << 5) | length).to_bytes(1, "little")
+		return ((major << 5) | length).to_bytes(1, "big")
 	elif length < 256:
-		return ((major << 5) | 24).to_bytes(1, "little") + length.to_bytes(1, "little")
+		return ((major << 5) | 24).to_bytes(1, "big") + length.to_bytes(1, "big")
 	elif length < 65536:
-		return ((major << 5) | 25).to_bytes(1, "little") + length.to_bytes(2, "little")
+		return ((major << 5) | 25).to_bytes(1, "big") + length.to_bytes(2, "big")
 	elif length < 4294967296:
-		return ((major << 5) | 26).to_bytes(1, "little") + length.to_bytes(4, "little")
+		return ((major << 5) | 26).to_bytes(1, "big") + length.to_bytes(4, "big")
 	elif length < 18446744073709551616:
-		return ((major << 5) | 27).to_bytes(1, "little") + length.to_bytes(8, "little")
+		return ((major << 5) | 27).to_bytes(1, "big") + length.to_bytes(8, "big")
 
 def encode_integer(io, integer):
 	if integer < 0:
