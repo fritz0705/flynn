@@ -10,11 +10,17 @@ traditional buffered and a streaming interface.
 Usage
 =====
 
-	>>> import flynn
-	>>> flynn.dumps({"foo": ["bar", 5]})
-	b'\xa1cfoo\x82cbar\x05'
-	>>> flynn.loads(b'\xa1cfoo\x82cbar\x05')
-	{'foo': ['bar', 5]}
+Flynn provides the high-level API provided by the flynn module and the low-level
+encoding and decoding APIs which are provided by flynn.encoder and flynn.decoder.
+
+	>>> flynn.dumps([1, [2, 3]])
+	b'\x82\x01\x82\x02\x03'
+	>>> flynn.dumph([1, [2, 3]])
+	'8201820203'
+	>>> flynn.loads(b'\x82\x01\x82\x02\x03')
+	[1, [2, 3]]
+	>>> flynn.loadh('8201820203')
+	[1, [2, 3]]
 
 Copyright / License
 ===================
