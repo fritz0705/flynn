@@ -23,7 +23,11 @@ def encode(io, obj):
 	elif isinstance(obj, int):
 		encode_integer(io, obj)
 	elif isinstance(obj, tuple):
-		encode_tagging(io, obj)
+		if isinstance(obj[0], int):
+			encode_tagging(io, obj)
+		elif isinstance(obj[0], collections.abc.Iterator):
+			iterator, type_ = obj
+			encode_generator(io, iterator, type_)
 	elif obj is True:
 		encode_true(io)
 	elif obj is False:
@@ -34,16 +38,7 @@ def encode(io, obj):
 		obj = obj()
 		if isinstance(obj, collections.abc.Iterator):
 			type_ = next(obj)
-			if type_ == "array":
-				encode_array_generator(io, obj)
-			elif type_ == "map":
-				encode_dict_generator(io, obj)
-			elif type_ == "text":
-				encode_textstring_generator(io, obj)
-			elif type_ == "bytes":
-				encode_bytestring_generator(io, obj)
-			else:
-				raise EncoderError("Unknown generator type {}".format(type_))
+			encode_generator(io, obj, type_)
 		else:
 			encode(io, obj)
 	else:
@@ -101,6 +96,18 @@ def encode_tagging(io, tagging):
 	io.write(_encode_ibyte(6, tagging[0]))
 	encode(io, tagging[1])
 
+def encode_generator(io, iterable, type_):
+	if type_ == "array":
+		encode_array_generator(io, iterable)
+	elif type_ == "map":
+		encode_dict_generator(io, iterable)
+	elif type_ == "text":
+		encode_textstring_generator(io, iterable)
+	elif type_ == "bytes":
+		encode_bytestring_generator(io, iterable)
+	else:
+		raise EncoderError("Unknown generator type {}".format(type_))
+
 def encode_array_generator(io, iterable):
 	io.write(b"\x9f")
 	for elem in iterable:
@@ -117,12 +124,16 @@ def encode_dict_generator(io, iterable):
 def encode_bytestring_generator(io, iterable):
 	io.write(b"\x5f")
 	for elem in iterable:
+		if not isinstance(elem, bytes):
+			raise EncoderError("Bytestring generators can only yield bytes")
 		encode(io, elem)
 	io.write(b"\xff")
 
 def encode_textstring_generator(io, iterable):
 	io.write(b"\x7f")
 	for elem in iterable:
+		if not isinstance(elem, str):
+			raise EncoderError("Textstring generators can only yield strings")
 		encode(io, elem)
 	io.write(b"\xff")
 
