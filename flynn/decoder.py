@@ -112,6 +112,7 @@ def decode_array(mtype, ainfo, stream):
 def decode_map(mtype, ainfo, stream):
 	length = _decode_length(mtype, ainfo, stream)
 	if length is None:
+		print("Indefinite")
 		res = {}
 		try:
 			while True:
@@ -139,6 +140,8 @@ def decode_other(mtype, ainfo, stream):
 		return True
 	elif ainfo == 22:
 		return None
+	elif ainfo == 31:
+		raise _Break()
 
 _jump_table = {
 	0: lambda *args: decode_integer(*args, sign=False),
