@@ -20,7 +20,7 @@ def encode(io, obj):
 		encode_textstring(io, obj)
 	elif isinstance(obj, bytes):
 		encode_bytestring(io, obj)
-	elif isinstance(obj, int):
+	elif isinstance(obj, int) and not isinstance(obj, bool):
 		encode_integer(io, obj)
 	elif isinstance(obj, tuple):
 		if isinstance(obj[0], int):
