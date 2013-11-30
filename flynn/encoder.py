@@ -1,7 +1,12 @@
 # coding: utf-8
 
 import io
-import collections.abc
+import sys
+
+if sys.version_info[0] == 2:
+	import abc
+else:
+	import collections.abc as abc
 
 import flynn.data
 
@@ -27,7 +32,7 @@ def encode(io, obj):
 	elif isinstance(obj, tuple):
 		if isinstance(obj[0], int):
 			encode_tagging(io, obj)
-		elif isinstance(obj[0], collections.abc.Iterator):
+		elif isinstance(obj[0], abc.Iterator):
 			iterator, type_ = obj
 			encode_generator(io, iterator, type_)
 	elif obj is True:
@@ -38,12 +43,12 @@ def encode(io, obj):
 		encode_null(io)
 	elif callable(obj):
 		obj = obj()
-		if isinstance(obj, collections.abc.Iterator):
+		if isinstance(obj, abc.Iterator):
 			type_ = next(obj)
 			encode_generator(io, obj, type_)
 		else:
 			encode(io, obj)
-	elif isinstance(obj, collections.abc.Iterable):
+	elif isinstance(obj, abc.Iterable):
 		encode_array_generator(io, iter(obj))
 	elif obj is flynn.data.Undefined:
 		encode_undefined(io)
