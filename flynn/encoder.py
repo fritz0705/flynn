@@ -97,3 +97,15 @@ def encode_dict_generator(io, iterable):
 		encode(io, value)
 	io.write(b"\xff")
 
+def encode_bytestring_generator(io, iterable):
+	io.write(b"\x5f")
+	for elem in iterable:
+		encode(io, elem)
+	io.write(b"\xff")
+
+def encode_textstring_generator(io, iterable):
+	io.write(b"\x7f")
+	for elem in iterable:
+		encode(io, elem)
+	io.write(b"\xff")
+
