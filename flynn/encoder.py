@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import io
+import collections.abc
 
 class EncoderError(Exception):
 	pass
@@ -29,6 +30,22 @@ def encode(io, obj):
 		encode_false(io)
 	elif obj is None:
 		encode_null(io)
+	elif callable(obj):
+		obj = obj()
+		if isinstance(obj, collections.abc.Iterator):
+			type_ = next(obj)
+			if type_ == "array":
+				encode_array_generator(io, obj)
+			elif type_ == "map":
+				encode_dict_generator(io, obj)
+			elif type_ == "text":
+				encode_textstring_generator(io, obj)
+			elif type_ == "bytes":
+				encode_bytestring_generator(io, obj)
+			else:
+				raise EncoderError("Unknown generator type {}".format(type_))
+		else:
+			encode(io, obj)
 	else:
 		raise EncoderError("{} has no defined mapping".format(type(obj)))
 
