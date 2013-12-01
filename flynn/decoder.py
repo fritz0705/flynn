@@ -118,7 +118,6 @@ def decode_array(mtype, ainfo, stream):
 def decode_map(mtype, ainfo, stream):
 	length = _decode_length(mtype, ainfo, stream)
 	if length is None:
-		print("Indefinite")
 		res = {}
 		try:
 			while True:
