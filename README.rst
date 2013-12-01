@@ -1,5 +1,5 @@
-Flynn from Breaking Bad
-#######################
+Flynn, the CBOR serializer
+##########################
 
 Flynn (his real name is Walter White Jr.), is a protagonist in Breaking Bad and the son of
 Walter White (a. k. a. Heisenberg).
