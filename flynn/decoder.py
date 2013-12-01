@@ -1,5 +1,7 @@
 # coding: utf-8
 
+import io
+
 import flynn.data
 
 class _Break(Exception):
@@ -14,10 +16,10 @@ def decode(obj):
 	elif isinstance(obj, str):
 		obj = iter(bytes.fromhex(obj))
 	elif isinstance(obj, io.IOBase):
-		def byte_gen():
+		def byte_gen(obj):
 			while True:
-				yield obj.read(1)
-		obj = byte_gen()
+				yield obj.read(1)[0]
+		obj = byte_gen(obj)
 	try:
 		return _decode_iter(obj)
 	except _Break:
