@@ -54,6 +54,8 @@ def _decode_length(mtype, ainfo, stream):
 
 def _decode_ibyte(stream):
 	ibyte = _consume(stream, 1)[0]
+	if isinstance(ibyte, str):
+		ibyte = ord(ibyte)
 	return (ibyte & 0b11100000) >> 5, ibyte & 0b00011111
 
 def _consume(stream, length):

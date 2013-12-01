@@ -4,11 +4,13 @@ import io
 import sys
 
 if sys.version_info[0] == 2:
-	import abc
+	import collections as abc
 else:
 	import collections.abc as abc
+	unicode = str
 
 import flynn.data
+from flynn.utils import to_bytes
 
 class EncoderError(Exception):
 	pass
@@ -23,10 +25,10 @@ def encode(io, obj):
 		encode_list(io, obj)
 	elif isinstance(obj, dict):
 		encode_dict(io, obj)
-	elif isinstance(obj, str):
-		encode_textstring(io, obj)
 	elif isinstance(obj, bytes):
 		encode_bytestring(io, obj)
+	elif isinstance(obj, unicode):
+		encode_textstring(io, obj)
 	elif isinstance(obj, int) and not isinstance(obj, bool):
 		encode_integer(io, obj)
 	elif isinstance(obj, tuple):
@@ -57,15 +59,15 @@ def encode(io, obj):
 
 def _encode_ibyte(major, length):
 	if length < 24:
-		return ((major << 5) | length).to_bytes(1, "big")
+		return to_bytes((major << 5) | length, 1, "big")
 	elif length < 256:
-		return ((major << 5) | 24).to_bytes(1, "big") + length.to_bytes(1, "big")
+		return to_bytes((major << 5) | 24, 1, "big") + to_bytes(length, 1, "big")
 	elif length < 65536:
-		return ((major << 5) | 25).to_bytes(1, "big") + length.to_bytes(2, "big")
+		return to_bytes((major << 5) | 25, 1, "big") + to_bytes(length, 2, "big")
 	elif length < 4294967296:
-		return ((major << 5) | 26).to_bytes(1, "big") + length.to_bytes(4, "big")
+		return to_bytes((major << 5) | 26, 1, "big") + to_bytes(length, 4, "big")
 	elif length < 18446744073709551616:
-		return ((major << 5) | 27).to_bytes(1, "big") + length.to_bytes(8, "big")
+		return to_bytes((major << 5) | 27, 1, "big") + to_bytes(length, 8, "big")
 
 def encode_integer(io, integer):
 	if integer < 0:
