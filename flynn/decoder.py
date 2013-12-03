@@ -1,6 +1,8 @@
 # coding: utf-8
 
 import io
+import struct
+import math
 
 import flynn.data
 
@@ -142,6 +144,19 @@ def decode_tagging(mtype, ainfo, stream):
 	length = _decode_length(mtype, ainfo, stream)
 	return flynn.data.Tagging(length, _decode_iter(stream))
 
+def decode_half_float(mtype, ainfo, stream):
+	half = struct.unpack(">H", _consume(stream, 2))[0]
+	valu = (half & 0x7fff) << 13 | (half & 0x8000) << 16
+	if ((half & 0x7c00) != 0x7c00):
+		return math.ldexp(struct.unpack("!f", struct.pack("!I", valu))[0], 112)
+	return struct.unpack("!f", struct.pack("!I", valu | 0x7f800000))[0]
+
+def decode_single_float(mtype, ainfo, stream):
+	return struct.unpack(">f", _consume(stream, 4))[0]
+
+def decode_double_float(mtype, ainfo, stream):
+	return struct.unpack(">d", _consume(stream, 8))[0]
+
 def decode_other(mtype, ainfo, stream):
 	if ainfo == 20:
 		return False
@@ -151,6 +166,12 @@ def decode_other(mtype, ainfo, stream):
 		return None
 	elif ainfo == 23:
 		return flynn.data.Undefined
+	elif ainfo == 25:
+		return decode_half_float(mtype, ainfo, stream)
+	elif ainfo == 26:
+		return decode_single_float(mtype, ainfo, stream)
+	elif ainfo == 27:
+		return decode_double_float(mtype, ainfo, stream)
 	elif ainfo == 31:
 		raise _Break()
 

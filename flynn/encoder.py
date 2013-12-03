@@ -2,12 +2,14 @@
 
 import io
 import sys
+import struct
 
 if sys.version_info[0] == 2:
 	import collections as abc
 else:
 	import collections.abc as abc
 	unicode = str
+	_long = None
 
 import flynn.data
 from flynn.utils import to_bytes
@@ -29,6 +31,10 @@ def encode(io, obj):
 		encode_bytestring(io, obj)
 	elif isinstance(obj, unicode):
 		encode_textstring(io, obj)
+	elif isinstance(obj, float):
+		encode_float(io, obj)
+	elif _long and isinstance(obj, _long):
+		encode_integer(io, obj)
 	elif isinstance(obj, int) and not isinstance(obj, bool):
 		encode_integer(io, obj)
 	elif isinstance(obj, tuple):
@@ -111,6 +117,10 @@ def encode_undefined(io):
 def encode_tagging(io, tagging):
 	io.write(_encode_ibyte(6, tagging[0]))
 	encode(io, tagging[1])
+
+def encode_float(io, obj):
+	io.write(b"\xfb")
+	io.write(struct.pack(">d", obj))
 
 def encode_generator(io, iterable, type_):
 	if type_ == "array":
