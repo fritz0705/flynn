@@ -95,7 +95,7 @@ class Encoder(object):
 	def encode_infinite_textstring(self, iterable):
 		self._write(b"\x7f")
 		for elem in iterable:
-			if not isinstance(elem, _str_types):
+			if not isinstance(elem, _str_type):
 				raise EncoderError("Object of type {} is not valid in infinite textstring".format(type(elem)))
 			self.encode(elem)
 		self._write(b"\xff")
@@ -125,6 +125,8 @@ class Encoder(object):
 		self.output.write(val)
 
 class InfiniteEncoder(Encoder):
+	chunksize = 8
+
 	def encode_list(self, object):
 		self.encode_infinite_list(object)
 	
@@ -132,10 +134,20 @@ class InfiniteEncoder(Encoder):
 		self.encode_infinite_dict(object)
 	
 	def encode_textstring(self, object):
-		self.encode_infinite_textstring(object)
+		if len(object) <= self.chunksize:
+			Encoder.encode_textstring(self, object)
+		else:
+			chunks = int((len(object) - 1) / 4) + 1
+			generator = (object[n*self.chunksize:(n+1)*self.chunksize] for n in range(chunks))
+			self.encode_infinite_textstring(generator)
 
 	def encode_bytestring(self, object):
-		self.encode_infinite_bytestring(object)
+		if len(object) <= self.chunksize:
+			Encoder.encode_bytestring(self, object)
+		else:
+			chunks = int((len(object) - 1) / 4) + 1
+			generator = (object[n*self.chunksize:(n+1)*self.chunksize] for n in range(chunks))
+			self.encode_infinite_bytestring(generator)
 
 def dump(obj, io, cls=Encoder):
 	cls(io).encode(obj)
