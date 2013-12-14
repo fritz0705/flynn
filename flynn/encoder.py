@@ -6,10 +6,14 @@ import struct
 
 if sys.version_info[0] == 2:
 	import collections as abc
+	_integer_types = (int, long)
+	_bytes_type = str
+	_str_type = unicode
 else:
 	import collections.abc as abc
-	unicode = str
-	_long = None
+	_str_type = str
+	_bytes_type = bytes
+	_integer_types = (int, )
 
 import flynn.data
 from flynn.utils import to_bytes
@@ -17,51 +21,123 @@ from flynn.utils import to_bytes
 class EncoderError(Exception):
 	pass
 
-def encode_str(obj):
-	buf = io.BytesIO()
-	encode(buf, obj)
-	return buf.getvalue()
+class Encoder(object):
+	def __init__(self, output):
+		self.output = output
 
-def encode(io, obj):
-	if isinstance(obj, list):
-		encode_list(io, obj)
-	elif isinstance(obj, dict):
-		encode_dict(io, obj)
-	elif isinstance(obj, bytes):
-		encode_bytestring(io, obj)
-	elif isinstance(obj, unicode):
-		encode_textstring(io, obj)
-	elif isinstance(obj, float):
-		encode_float(io, obj)
-	elif _long and isinstance(obj, _long):
-		encode_integer(io, obj)
-	elif isinstance(obj, int) and not isinstance(obj, bool):
-		encode_integer(io, obj)
-	elif isinstance(obj, tuple):
-		if isinstance(obj[0], int):
-			encode_tagging(io, obj)
-		elif isinstance(obj[0], abc.Iterator):
-			iterator, type_ = obj
-			encode_generator(io, iterator, type_)
-	elif obj is True:
-		encode_true(io)
-	elif obj is False:
-		encode_false(io)
-	elif obj is None:
-		encode_null(io)
-	elif callable(obj):
-		obj = obj()
-		if isinstance(obj, abc.Iterator):
-			type_ = next(obj)
-			encode_generator(io, obj, type_)
+	def encode(self, object):
+		if isinstance(object, list):
+			self.encode_list(object)
+		elif isinstance(object, dict):
+			self.encode_dict(object)
+		elif isinstance(object, _bytes_type):
+			self.encode_bytestring(object)
+		elif isinstance(object, _str_type):
+			self.encode_textstring(object)
+		elif isinstance(object, float):
+			self.encode_float(object)
+		elif isinstance(object, bool):
+			self.encode_bool(object)
+		elif isinstance(object, _integer_types):
+			self.encode_integer(object)
+		elif isinstance(object, flynn.data.Tagging):
+			self.encode_tagging(object)
+		elif object is flynn.data.Undefined:
+			self.encode_undefined()
+		elif object is None:
+			self.encode_null()
+
+	def encode_list(self, list):
+		self._write(_encode_ibyte(4, len(list)))
+		for elem in list:
+			self.encode(elem)
+
+	def encode_dict(self, dict):
+		self._write(_encode_ibyte(5, len(dict)))
+		for key, value in dict.items():
+			self.encode(key)
+			self.encode(value)
+
+	def encode_bytestring(self, bytestring):
+		self._write(_encode_ibyte(2, len(bytestring)))
+		self._write(bytestring)
+
+	def encode_textstring(self, textstring):
+		self._write(_encode_ibyte(3, len(textstring)))
+		self._write(textstring.encode("utf-8"))
+
+	def encode_float(self, float):
+		self._write(b"\xfb")
+		self._write(struct.pack(">d", float))
+
+	def encode_integer(self, integer):
+		if integer < 0:
+			integer = -integer - 1
+			self._write(_encode_ibyte(1, integer))
 		else:
-			encode(io, obj)
-	elif isinstance(obj, abc.Iterable):
-		encode_array_generator(io, iter(obj))
-	elif obj is flynn.data.Undefined:
-		encode_undefined(io)
-	else:
-		raise EncoderError("{} has no defined mapping".format(type(obj)))
+			self._write(_encode_ibyte(0, integer))
+
+	def encode_tagging(self, tagging):
+		self._write(_encode_ibyte(6, tagging[0]))
+		self.encode(tagging[1])
+
+	def encode_boolean(self, boolean):
+		if boolean is True:
+			self._write(_encode_byte(7, 21))
+		elif boolean is False:
+			self._write(_encode_byte(7, 20))
+	
+	def encode_null(self):
+		self._write(_encode_byte(7, 22))
+
+	def encode_infinite_textstring(self, iterable):
+		self._write(b"\x7f")
+		for elem in iterable:
+			self.encode(elem)
+		self._write(b"\xff")
+
+	def encode_infinite_bytestring(self, iterable):
+		self._write(b"\x5f")
+		for elem in iterable:
+			self.encode(elem)
+		self._write(b"\xff")
+
+	def encode_infinite_list(self, iterable):
+		self._write(b"\x9f")
+		for elem in iterable:
+			self.encode(elem)
+		self._write(b"\xff")
+
+	def encode_infinite_dict(self, iterable):
+		self._write(b"\xbf")
+		for key, value in iterable:
+			self.encode(key)
+			self.encode(value)
+		self._write(b"\xff")
+
+	def _write(self, val):
+		self.output.write(val)
+
+class InfiniteEncoder(Encoder):
+	def encode_list(self, object):
+		self.encode_infinite_list(object)
+	
+	def encode_dict(self, object):
+		self.encode_infinite_dict(object)
+	
+	def encode_textstring(self, object):
+		self.encode_infinite_textstring(object)
+
+	def encode_bytestring(self, object):
+		self.encode_infinite_bytestring(object)
+
+def dump(obj, io, cls=Encoder):
+	cls(io).encode(obj)
+
+def dumps(obj, cls=Encoder):
+	buf = io.BytesIO()
+	cls(buf).encode(obj)
+	return buf.getvalue()
 
 def _encode_ibyte(major, length):
 	if length < 24:
@@ -75,91 +151,5 @@ def _encode_ibyte(major, length):
 	elif length < 18446744073709551616:
 		return to_bytes((major << 5) | 27, 1, "big") + to_bytes(length, 8, "big")
 
-def encode_integer(io, integer):
-	if integer < 0:
-		integer = -integer - 1
-		io.write(_encode_ibyte(1, integer))
-	else:
-		io.write(_encode_ibyte(0, integer))
-
-def encode_textstring(io, string):
-	string = string.encode("utf-8")
-	io.write(_encode_ibyte(3, len(string)))
-	io.write(string)
-
-def encode_bytestring(io, string):
-	io.write(_encode_ibyte(2, len(string)))
-	io.write(string)
-
-def encode_list(io, array):
-	io.write(_encode_ibyte(4, len(array)))
-	for elem in array:
-		encode(io, elem)
-
-def encode_dict(io, d):
-	io.write(_encode_ibyte(5, len(d)))
-	for key, value in d.items():
-		encode(io, key)
-		encode(io, value)
-
-def encode_true(io):
-	io.write(_encode_ibyte(7, 21))
-
-def encode_false(io):
-	io.write(_encode_ibyte(7, 20))
-
-def encode_null(io):
-	io.write(_encode_ibyte(7, 22))
-
-def encode_undefined(io):
-	io.write(_encode_ibyte(7, 23))
-
-def encode_tagging(io, tagging):
-	io.write(_encode_ibyte(6, tagging[0]))
-	encode(io, tagging[1])
-
-def encode_float(io, obj):
-	io.write(b"\xfb")
-	io.write(struct.pack(">d", obj))
-
-def encode_generator(io, iterable, type_):
-	if type_ == "array":
-		encode_array_generator(io, iterable)
-	elif type_ == "map":
-		encode_dict_generator(io, iterable)
-	elif type_ == "text":
-		encode_textstring_generator(io, iterable)
-	elif type_ == "bytes":
-		encode_bytestring_generator(io, iterable)
-	else:
-		raise EncoderError("Unknown generator type {}".format(type_))
-
-def encode_array_generator(io, iterable):
-	io.write(b"\x9f")
-	for elem in iterable:
-		encode(io, elem)
-	io.write(b"\xff")
-
-def encode_dict_generator(io, iterable):
-	io.write(b"\xbf")
-	for key, value in iterable:
-		encode(io, key)
-		encode(io, value)
-	io.write(b"\xff")
-
-def encode_bytestring_generator(io, iterable):
-	io.write(b"\x5f")
-	for elem in iterable:
-		if not isinstance(elem, bytes):
-			raise EncoderError("Bytestring generators can only yield bytes")
-		encode(io, elem)
-	io.write(b"\xff")
-
-def encode_textstring_generator(io, iterable):
-	io.write(b"\x7f")
-	for elem in iterable:
-		if not isinstance(elem, str):
-			raise EncoderError("Textstring generators can only yield strings")
-		encode(io, elem)
-	io.write(b"\xff")
+__all__ = ["Encoder", "InfiniteEncoder", "EncoderError", "dump", "dumps"]
 

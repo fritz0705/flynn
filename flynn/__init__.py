@@ -16,14 +16,11 @@ __all__ = [
 	"loadh"
 ]
 
-def dump(obj, fp):
-	return flynn.encoder.encode(fp, obj)
+dump = flynn.encoder.dump
+dumps = flynn.encoder.dumps
 
-def dumps(obj):
-	return flynn.encoder.encode_str(obj)
-
-def dumph(obj):
-	return base64.b16encode(dumps(obj)).decode("utf-8")
+def dumph(*args, **kwargs):
+	return base64.b16encode(dumps(*args, **kwargs)).decode("utf-8")
 
 def load(s):
 	return flynn.decoder.decode(s)
