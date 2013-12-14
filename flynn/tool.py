@@ -20,22 +20,25 @@ def main(args=sys.argv[1:]):
 
 	intermediate = None
 	if input_format in {"cbor", "cbori"}:
-		intermediate = flynn.load(sys.stdin.raw)
+		intermediate = flynn.load(sys.stdin.buffer.raw)
 	elif input_format in {"cborh", "cborhi"}:
 		intermediate = flynn.loadh(sys.stdin.read())
 	elif input_format == "json":
 		intermediate = json.load(sys.stdin)
 
 	if output_format == "cbor":
-		flynn.dump(intermediate, sys.stdout.raw)
+		flynn.dump(intermediate, sys.stdout.buffer.raw)
 	elif output_format == "cbori":
-		flynn.dump(intermediate, sys.stdout.raw, cls=flynn.encoder.InfiniteEncoder)
+		flynn.dump(intermediate, sys.stdout.buffer.raw, cls=flynn.encoder.InfiniteEncoder)
 	elif output_format == "cborh":
 		sys.stdout.write(flynn.dumph(intermediate))
+		sys.stdout.write("\n")
 	elif output_format == "cborhi":
 		sys.stdout.write(flynn.dumph(intermediate, cls=flynn.encoder.InfiniteEncoder))
+		sys.stdout.write("\n")
 	elif output_format == "json":
 		json.dump(intermediate, sys.stdout)
+		sys.stdout.write("\n")
 
 if __name__ == "__main__":
 	main()
