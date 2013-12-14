@@ -46,6 +46,8 @@ class Encoder(object):
 			self.encode_undefined()
 		elif object is None:
 			self.encode_null()
+		else:
+			raise EncoderError("Object of type {} is not serializable".format(type(output)))
 
 	def encode_list(self, list):
 		self._write(_encode_ibyte(4, len(list)))
@@ -93,12 +95,16 @@ class Encoder(object):
 	def encode_infinite_textstring(self, iterable):
 		self._write(b"\x7f")
 		for elem in iterable:
+			if not isinstance(elem, _str_types):
+				raise EncoderError("Object of type {} is not valid in infinite textstring".format(type(elem)))
 			self.encode(elem)
 		self._write(b"\xff")
 
 	def encode_infinite_bytestring(self, iterable):
 		self._write(b"\x5f")
 		for elem in iterable:
+			if not isinstance(elem, _bytes_type):
+				raise EncoderError("Object of type {} is not valid in infinite bytestring".format(type(elem)))
 			self.encode(elem)
 		self._write(b"\xff")
 
