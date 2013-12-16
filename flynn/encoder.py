@@ -132,17 +132,22 @@ class Encoder(object):
 class InfiniteEncoder(Encoder):
 	chunksize = 8
 
+	def __init__(self, output, chunksize=None):
+		Encoder.__init__(self, output)
+		if chunksize is not None:
+			self.chunksize = chunksize
+
 	def encode_list(self, object):
 		self.encode_infinite_list(object)
 	
 	def encode_dict(self, object):
-		self.encode_infinite_dict(object)
+		self.encode_infinite_dict(object.items())
 	
 	def encode_textstring(self, object):
 		if len(object) <= self.chunksize:
 			Encoder.encode_textstring(self, object)
 		else:
-			chunks = int((len(object) - 1) / 4) + 1
+			chunks = int((len(object) - 1) / self.chunksize) + 1
 			generator = (object[n*self.chunksize:(n+1)*self.chunksize] for n in range(chunks))
 			self.encode_infinite_textstring(generator)
 
@@ -150,16 +155,16 @@ class InfiniteEncoder(Encoder):
 		if len(object) <= self.chunksize:
 			Encoder.encode_bytestring(self, object)
 		else:
-			chunks = int((len(object) - 1) / 4) + 1
+			chunks = int((len(object) - 1) / self.chunksize) + 1
 			generator = (object[n*self.chunksize:(n+1)*self.chunksize] for n in range(chunks))
 			self.encode_infinite_bytestring(generator)
 
-def dump(obj, io, cls=Encoder):
-	cls(io).encode(obj)
+def dump(obj, io, cls=Encoder, *args, **kwargs):
+	cls(io, *args, **kwargs).encode(obj)
 
-def dumps(obj, cls=Encoder):
+def dumps(obj, cls=Encoder, *args, **kwargs):
 	buf = io.BytesIO()
-	cls(buf).encode(obj)
+	cls(buf, *args, **kwargs).encode(obj)
 	return buf.getvalue()
 
 def _encode_ibyte(major, length):
