@@ -19,15 +19,12 @@ __all__ = [
 dump = flynn.encoder.dump
 dumps = flynn.encoder.dumps
 
+load = flynn.decoder.load
+loads = flynn.decoder.loads
+
 def dumph(*args, **kwargs):
 	return base64.b16encode(dumps(*args, **kwargs)).decode("utf-8")
 
-def load(s):
-	return flynn.decoder.decode(s)
-
-def loads(s):
-	return flynn.decoder.decode(s)
-
-def loadh(s):
-	return flynn.decoder.decode(s)
+def loadh(data, *args **kwargs):
+	return loads(base64.b16decode(data), *args, **kwargs)
 
