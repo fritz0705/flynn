@@ -151,16 +151,16 @@ class Decoder(object):
 		if ainfo < 24:
 			return ainfo
 		elif ainfo == 24:
-			return int.from_bytes(self._read(stream, 1), "big")
+			return int.from_bytes(self._read(1), "big")
 		elif ainfo == 25:
-			return int.from_bytes(self._read(stream, 2), "big")
+			return int.from_bytes(self._read(2), "big")
 		elif ainfo == 26:
-			return int.from_bytes(self._read(stream, 4), "big")
+			return int.from_bytes(self._read(4), "big")
 		elif ainfo == 27:
-			return int.from_bytes(self._read(stream, 8), "big")
+			return int.from_bytes(self._read(8), "big")
 		elif ainfo == 31:
 			return None
-		raise InvalidCborError(stream, "Invalid additional information {}".format(ainfo))
+		raise InvalidCborError("Invalid additional information {}".format(ainfo))
 
 	def _read(self, n):
 		m = self.input.read(n)

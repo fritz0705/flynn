@@ -25,6 +25,6 @@ loads = flynn.decoder.loads
 def dumph(*args, **kwargs):
 	return base64.b16encode(dumps(*args, **kwargs)).decode("utf-8")
 
-def loadh(data, *args **kwargs):
+def loadh(data, *args, **kwargs):
 	return loads(base64.b16decode(data), *args, **kwargs)
 
