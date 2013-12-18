@@ -6,11 +6,12 @@ import math
 
 import flynn.data
 
-class _Break(Exception):
-	pass
-
 class InvalidCborError(Exception):
 	pass
+
+class _Break(InvalidCborError):
+	def __init__(self):
+		InvalidCborError.__init__(self, "Invalid BREAK code occurred")
 
 class Decoder(object):
 	def __init__(self, input):
