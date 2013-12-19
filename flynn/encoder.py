@@ -7,13 +7,12 @@ import struct
 if sys.version_info[0] == 2:
 	import collections as abc
 	_integer_types = (int, long)
-	_bytes_type = str
-	_str_type = unicode
 else:
 	import collections.abc as abc
-	_str_type = str
-	_bytes_type = bytes
 	_integer_types = (int, )
+
+_str_type = type(u"")
+_bytes_type = type(b"")
 
 import flynn.data
 from flynn.utils import to_bytes
@@ -37,7 +36,7 @@ class Encoder(object):
 		elif isinstance(object, float):
 			self.encode_float(object)
 		elif isinstance(object, bool):
-			self.encode_bool(object)
+			self.encode_boolean(object)
 		elif isinstance(object, _integer_types):
 			self.encode_integer(object)
 		elif isinstance(object, flynn.data.Tagging):
@@ -67,8 +66,9 @@ class Encoder(object):
 		self._write(bytestring)
 
 	def encode_textstring(self, textstring):
-		self._write(_encode_ibyte(3, len(textstring)))
-		self._write(textstring.encode("utf-8"))
+		string_ = textstring.encode("utf-8")
+		self._write(_encode_ibyte(3, len(string_)))
+		self._write(string_)
 
 	def encode_float(self, float):
 		self._write(b"\xfb")
