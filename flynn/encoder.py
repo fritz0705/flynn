@@ -77,12 +77,21 @@ class Encoder(object):
 	def encode_integer(self, integer):
 		if integer < 0:
 			integer = -integer - 1
-			self._write(_encode_ibyte(1, integer))
+			try:
+				self._write(_encode_ibyte(1, integer))
+			except TypeError:
+				raise EncoderError("Encoding integers lower than -18446744073709551616 is not supported")
 		else:
-			self._write(_encode_ibyte(0, integer))
+			try:
+				self._write(_encode_ibyte(0, integer))
+			except TypeError:
+				raise EncoderError("Encoding integers larger than 18446744073709551615 is not supported")
 
 	def encode_tagging(self, tagging):
-		self._write(_encode_ibyte(6, tagging[0]))
+		try:
+			self._write(_encode_ibyte(6, tagging[0]))
+		except TypeError:
+			raise EncoderError("Encoding tag larger than 18446744073709551615 is not supported")
 		self.encode(tagging[1])
 
 	def encode_boolean(self, boolean):
@@ -162,9 +171,9 @@ class InfiniteEncoder(Encoder):
 def dump(obj, io, cls=Encoder, *args, **kwargs):
 	cls(io, *args, **kwargs).encode(obj)
 
-def dumps(obj, cls=Encoder, *args, **kwargs):
+def dumps(obj, *args, **kwargs):
 	buf = io.BytesIO()
-	cls(buf, *args, **kwargs).encode(obj)
+	dump(obj, buf, *args, **kwargs)
 	return buf.getvalue()
 
 def _encode_ibyte(major, length):
@@ -178,6 +187,8 @@ def _encode_ibyte(major, length):
 		return to_bytes((major << 5) | 26, 1, "big") + to_bytes(length, 4, "big")
 	elif length < 18446744073709551616:
 		return to_bytes((major << 5) | 27, 1, "big") + to_bytes(length, 8, "big")
+	else:
+		return None
 
 __all__ = ["Encoder", "InfiniteEncoder", "EncoderError", "dump", "dumps"]
 
