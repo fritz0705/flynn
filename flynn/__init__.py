@@ -4,6 +4,7 @@ import base64
 
 import flynn.decoder
 import flynn.encoder
+import flynn.data
 
 __all__ = [
 	"decoder",
@@ -13,7 +14,9 @@ __all__ = [
 	"dumph",
 	"load",
 	"loads",
-	"loadh"
+	"loadh",
+	"Tagging",
+	"Undefined"
 ]
 
 dump = flynn.encoder.dump
@@ -21,6 +24,9 @@ dumps = flynn.encoder.dumps
 
 load = flynn.decoder.load
 loads = flynn.decoder.loads
+
+Tagging = flynn.data.Tagging
+Undefined = flynn.data.Undefined
 
 def dumph(*args, **kwargs):
 	return base64.b16encode(dumps(*args, **kwargs)).decode("utf-8")
