@@ -169,6 +169,26 @@ class Decoder(object):
 			raise InvalidCborError("Expected {} bytes, got {} bytes instead".format(n, len(m)))
 		return m
 
+class StandardDecoder(Decoder):
+	def __init__(self, input, tagging_hooks=None):
+		Decoder.__init__(self, input)
+		if tagging_hooks is None:
+			tagging_hooks = {}
+		self.tagging_hooks = tagging_hooks
+	
+	def decode_tagging(self, mtype, ainfo):
+		tagged = Decoder.decode_tagging(self, mtype, ainfo)
+		if tagged.tag in self.tagging_hooks:
+			return self.tagging_hooks(tagged.tag, tagged.object)
+		else:
+			return tagged
+	
+	def register_tagging(self, tag_id, hook):
+		self.tagging_hooks[tag_id] = hook
+
+	def unregister_tagging(self, tag_id):
+		del self.tagging_hooks[tag_id]
+	
 def load(fp, cls=Decoder, *args, **kwargs):
 	return cls(fp, *args, **kwargs).decode()
 
