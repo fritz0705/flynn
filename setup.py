@@ -8,7 +8,7 @@ also a simple streaming interface for networking applications."""
 
 setuptools.setup(
 	name="flynn",
-	version="1.0.0b1",
+	version="1.0.0b2",
 	packages=[
 		"flynn",
 	],
