@@ -179,7 +179,7 @@ class StandardDecoder(Decoder):
 	def decode_tagging(self, mtype, ainfo):
 		tagged = Decoder.decode_tagging(self, mtype, ainfo)
 		if tagged.tag in self.tagging_hooks:
-			return self.tagging_hooks(tagged.tag, tagged.object)
+			return self.tagging_hooks[tagged.tag](tagged.tag, tagged.object)
 		else:
 			return tagged
 	
