@@ -119,10 +119,10 @@ class Decoder(object):
 		return struct.unpack("!f", struct.pack("!I", valu | 0x7f800000))[0]
 
 	def decode_single_float(self, mtype, ainfo):
-		return self.unpack(">f", self._read(4))[0]
+		return struct.unpack(">f", self._read(4))[0]
 
 	def decode_double_float(self, mtype, ainfo):
-		return self.unpack(">d", self._read(8))[0]
+		return struct.unpack(">d", self._read(8))[0]
 
 	def decode_other(self, mtype, ainfo):
 		if ainfo == 20:
