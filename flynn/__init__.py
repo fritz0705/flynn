@@ -11,7 +11,8 @@ __all__ = [
 	"loads",
 	"loadh",
 	"EndOfMessage",
-	"Empty"
+	"Empty",
+	"InvalidSMLError"
 ]
 
 load = flynn.decoder.load
@@ -19,6 +20,8 @@ loads = flynn.decoder.loads
 
 EndOfMessage = flynn.data.EndOfMessage
 Empty = flynn.data.Empty
+
+InvalidSMLError = flynn.decoder.InvalidSMLError
 
 def dumph(*args, **kwargs):
 	return base64.b16encode(dumps(*args, **kwargs)).decode("utf-8")
