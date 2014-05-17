@@ -51,21 +51,29 @@ class Decoder(object):
 	def _decode_octet_string(self, length):
 		return self._read(length)
 
-	def _decode_int8(self):
+	def _decode_uint8(self):
 		return flynn.utils.from_bytes(self._read(1), 1, "big")
-	_decode_uint8 = _decode_int8
+
+	def _decode_uint16(self):
+		return flynn.utils.from_bytes(self._read(2), 2, "big")
+
+	def _decode_uint32(self):
+		return flynn.utils.from_bytes(self._read(4), 4, "big")
+
+	def _decode_uint64(self):
+		return flynn.utils.from_bytes(self._read(8), 8, "big")
+
+	def _decode_int8(self):
+		return flynn.utils.from_bytes(self._read(1), 1, "big", True)
 
 	def _decode_int16(self):
-		return flynn.utils.from_bytes(self._read(2), 2, "big")
-	_decode_uint16 = _decode_int16
-	
+		return flynn.utils.from_bytes(self._read(2), 2, "big", True)
+
 	def _decode_int32(self):
-		return flynn.utils.from_bytes(self._read(4), 4, "big")
-	_decode_uint32 = _decode_int32
+		return flynn.utils.from_bytes(self._read(4), 4, "big", True)
 
 	def _decode_int64(self):
-		return flynn.utils.from_bytes(self._read(8), 8, "big")
-	_decode_uint64 = _decode_int64
+		return flynn.utils.from_bytes(self._read(8), 8, "big", True)
 
 	def _decode_boolean(self):
 		return self._read(1) != b"\x00"

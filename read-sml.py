@@ -5,6 +5,7 @@ import argparse
 import sys
 
 import flynn
+import kugel
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("file", nargs="?", default=sys.stdin.buffer.raw)
@@ -17,7 +18,7 @@ if isinstance(file, str):
 
 def search(f, needle):
 	buf = f.read(len(needle))
-	while buf != b"\x1b\x1b\x1b\x1b\x01\x01\x01\x01":
+	while buf != needle:
 		r = f.read(1)
 		if not r:
 			raise EOFError()
@@ -32,8 +33,11 @@ while True:
 		try:
 			msg = flynn.load(file)
 		except flynn.InvalidSMLError:
+			print("Invalid SML!")
 			break
 		if msg == flynn.EndOfMessage:
+			print("End of message")
 			break
 		pprint.pprint(msg)
+		kugel.rotz(msg)
 
