@@ -1,8 +1,5 @@
-Flynn, the CBOR serializer
-##########################
-
-Flynn (his real name is Walter White Jr.), is a protagonist in Breaking Bad and the son of
-Walter White (a. k. a. Heisenberg).
+Flynn - Simple CBOR En/Decoder
+##############################
 
 Flynn is also a Python library providing CBOR [RFC7049] encoding and decoding with a
 traditional buffered and a streaming interface.
