@@ -29,7 +29,7 @@ if sys.version_info[0] == 2:
 		return struct.unpack(_build_fmt(length, endianess), val)[0]
 else:
 	def from_bytes(val, length, endianess):
-		return int.from_bytes(val, length, endianess)
+		return int.from_bytes(val, endianess)
 	
 	def to_bytes(val, length, endianess):
 		return val.to_bytes(length, endianess)
