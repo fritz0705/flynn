@@ -22,7 +22,6 @@ if sys.version_info[0] == 2:
 		return format_
 
 	def to_bytes(val, length, endianess):
-		fmt = _build_fmt(length, endianess)
 		return struct.pack(_build_fmt(length, endianess), val)
 
 	def from_bytes(val, length, endianess):
